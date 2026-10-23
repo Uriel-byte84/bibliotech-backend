@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bibliotech - Gestión Académica</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-base-300 min-h-screen text-base-content flex flex-col">
+
+    <!-- NAVBAR -->
+    <div class="navbar bg-base-100 shadow-xl px-6 border-b border-base-200">
+        <div class="flex-1">
+            <a class="btn btn-ghost text-2xl font-black text-primary tracking-wide">📚 Bibliotech</a>
+        </div>
+        <div class="flex-none gap-4" id="userInfo"></div>
+    </div>
+
+    <div class="container mx-auto p-6 flex-1 flex flex-col justify-center items-center">
+
+        <!-- AUTH CARD (Login / Registro) -->
+        <div id="authCard" class="card w-full max-w-md bg-base-100 shadow-2xl border border-base-200">
+            <div class="card-body">
+                <div class="tabs tabs-boxed mb-4 justify-center">
+                    <a id="tabLogin" class="tab tab-active" onclick="toggleAuth('login')">Ingresar</a>
+                    <a id="tabRegister" class="tab" onclick="toggleAuth('register')">Registrarse</a>
+                </div>
+
+                <!-- FORMULARIO LOGIN -->
+                <form id="loginForm" class="space-y-4">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Correo Electrónico</span></label>
+                        <input type="email" id="loginEmail" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Contraseña</span></label>
+                        <input type="password" id="loginPassword" class="input input-bordered" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full mt-2">Iniciar Sesión</button>
+                </form>
+
+                <!-- FORMULARIO REGISTRO (Oculto por defecto) -->
+                <form id="registerForm" class="space-y-4 hidden">
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Nombre Completo</span></label>
+                        <input type="text" id="regName" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Correo Electrónico</span></label>
+                        <input type="email" id="regEmail" class="input input-bordered" required />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Contraseña (Mín. 6 caracteres)</span></label>
+                        <input type="password" id="regPassword" class="input input-bordered" required minlength="6" />
+                    </div>
+                    <div class="form-control">
+                        <label class="label"><span class="label-text">Rol</span></label>
+                        <select id="regRole" class="select select-bordered w-full">
+                            <option value="Student">Estudiante (Solo lectura)</option>
+                            <option value="Professor">Profesor (Puede subir archivos)</option>
+                            <option value="Admin">Administrador</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-secondary w-full mt-2">Crear Cuenta</button>
+                </form>
+
+                <div id="authAlert" class="alert mt-4 hidden text-sm py-2"></div>
+            </div>
+        </div>
+
+        <!-- DASHBOARD (Oculto al inicio) -->
+        <div id="mainDashboard" class="w-full max-w-4xl space-y-6 hidden">
+            <!-- SUBIR MATERIAL -->
+            <div id="uploadSection" class="card bg-base-100 shadow-xl border border-base-200 hidden">
+                <div class="card-body">
+                    <h3 class="card-title text-xl text-secondary">📤 Subir Material</h3>
+                    <form id="uploadForm" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                        <div class="form-control">
+                            <label class="label"><span class="label-text">Título</span></label>
+                            <input type="text" id="docTitle" class="input input-bordered" required />
+                        </div>
+                        <div class="form-control">
+                            <label class="label"><span class="label-text">Archivo</span></label>
+                            <input type="file" id="docFile" class="file-input file-input-bordered file-input-primary w-full" required />
+                        </div>
+                        <div class="form-control col-span-1 md:col-span-2">
+                            <label class="label"><span class="label-text">Descripción</span></label>
+                            <input type="text" id="docDesc" class="input input-bordered" />
+                        </div>
+                        <div class="col-span-1 md:col-span-2">
+                            <button type="submit" class="btn btn-secondary w-full">Subir y Publicar</button>
+                        </div>
+                    </form>
+                    <div id="uploadAlert" class="alert mt-2 hidden text-sm py-2"></div>
+                </div>
+            </div>
+
+            <!-- LISTA DE MATERIALES -->
+            <div class="card bg-base-100 shadow-xl border border-base-200">
+                <div class="card-body">
+                    <h3 class="card-title text-xl mb-4">📖 Catálogo de Materiales</h3>
+                    <div class="overflow-x-auto">
+                        <table class="table table-zebra w-full">
+                            <thead><tr><th>Título</th><th>Descripción</th><th>Subido por</th><th>Acción</th></tr></thead>
+                            <tbody id="materialsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
