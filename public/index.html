@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Bibliotech - Sistema</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f4f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); width: 420px; }
+        h2, h3 { color: #2c3e50; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; }
+        button { width: 100%; padding: 10px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        button:hover { background: #2980b9; }
+        .mensaje { text-align: center; margin-top: 15px; font-weight: bold; }
+        .tabs { display: flex; margin-bottom: 20px; cursor: pointer; border-bottom: 2px solid #ccc; }
+        .tab { flex: 1; text-align: center; padding: 10px; font-weight: bold; color: #7f8c8d; }
+        .tab.active { color: #3498db; border-bottom: 3px solid #3498db; margin-bottom: -2px; }
+        .form-section, .dashboard { display: none; }
+        .form-section.active, .dashboard.active { display: block; }
+        .libro-item { background: #ecf0f1; padding: 10px; margin-top: 8px; border-radius: 4px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container" id="authContainer">
+        <h2>📚 Bibliotech</h2>
+        
+        <div class="tabs" id="authTabs">
+            <div class="tab active" onclick="cambiarTab('login')">Iniciar Sesión</div>
+            <div class="tab" onclick="cambiarTab('register')">Registrarse</div>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="loginSection" class="form-section active">
+            <form id="loginForm">
+                <input type="email" id="loginEmail" placeholder="Correo electrónico" required>
+                <input type="password" id="loginPassword" placeholder="Contraseña" required>
+                <button type="submit">Entrar al Sistema</button>
+            </form>
+        </div>
+
+        <!-- REGISTRO -->
+        <div id="registerSection" class="form-section">
+            <form id="registerForm">
+                <input type="text" id="regNombre" placeholder="Nombre completo" required>
+                <input type="email" id="regEmail" placeholder="Correo electrónico" required>
+                <input type="password" id="regPassword" placeholder="Contraseña (mínimo 6 caracteres)" required>
+                <select id="regRol">
+                    <option value="student">Estudiante (Student)</option>
+                    <option value="professor">Profesor (Professor)</option>
+                    <option value="admin">Administrador (Admin)</option>
+                </select>
+                <button type="submit">Registrarse</button>
+            </form>
+        </div>
+
+        <p id="resultado" class="mensaje"></p>
+    </div>
+
+    <!-- PANEL PRINCIPAL (DASHBOARD) -->
+    <div class="container dashboard" id="dashboardContainer">
+        <h2>📖 Panel Bibliotech</h2>
+        <p id="userRoleInfo" style="text-align: center; font-weight: bold; color: #27ae60;"></p>
+        
+        <!-- SECCION SUBIDA (Solo visible para Admin o Professor) -->
+        <div id="uploadSection" style="margin-top: 20px; border-top: 1px solid #ccc; padding-top: 15px;">
+            <h3>Subir Material / Libro (Multer)</h3>
+            <form id="uploadForm">
+                <input type="text" id="tituloLibro" placeholder="Título del libro" required>
+                <input type="text" id="autorLibro" placeholder="Autor" required>
+                <input type="file" id="archivoLibro" accept=".pdf,.doc,.docx,.txt" required>
+                <button type="submit" style="background: #27ae60;">Subir Archivo</button>
+            </form>
+        </div>
+
+        <h3 style="margin-top: 20px;">Biblioteca de Materiales</h3>
+        <div id="listaLibros" style="max-height: 180px; overflow-y: auto;"></div>
+        
+        <button onclick="cerrarSesion()" style="background: #e74c3c; margin-top: 20px;">Cerrar Sesión</button>
+    </div>
+
+    <script>
+        function cambiarTab(tipo) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('resultado').textContent = '';
+
+            if (tipo === 'login') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('loginSection').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('registerSection').classList.add('active');
+            }
+        }
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mensajeP = document.getElementById('resultado');
+            mensajeP.style.color = 'blue';
+            mensajeP.textContent = 'Registrando...';
+            
+            try {
+                const nombre = document.getElementById('regNombre').value;
+                const email = document.getElementById('regEmail').value;
+                const password = document.getElementById('regPassword').value;
+                const rol = document.getElementById('regRol').value;
+
+                const respuesta = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, email, password, rol })
+                });
+
+                const data = await respuesta.json();
+                if (respuesta.ok) {
+                    mensajeP.style.color = 'green';
+                    mensajeP.textContent = data.mensaje + " ¡Ya podés iniciar sesión!";
+                    setTimeout(() => cambiarTab('login'), 1500); // Cambia solo al login
+                } else {
+                    mensajeP.style.color = 'red';
+                    mensajeP.textContent = data.error;
+                }
+            } catch (err) {
+                mensajeP.style.color = 'red';
+                mensajeP.textContent = 'Error de conexión.';
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const mensajeP = document.getElementById('resultado');
+            mensajeP.style.color = 'blue';
+            mensajeP.textContent = 'Iniciando sesión...';
+            
+            try {
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+
+                const respuesta = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await respuesta.json();
+                if (respuesta.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('rol', data.rol);
+                    mostrarDashboard(data.rol);
+                } else {
+                    mensajeP.style.color = 'red';
+                    mensajeP.textContent = data.error;
+                }
+            } catch (err) {
+                mensajeP.style.color = 'red';
+                mensajeP.textContent = 'Error de conexión.';
+            }
+        });
+
+        function mostrarDashboard(rol) {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('dashboardContainer').classList.add('active');
+            document.getElementById('userRoleInfo').textContent = `Sesión activa - Rol: ${rol.toUpperCase()}`;
+            
+            // Control de acceso por rol: Si es student, ocultamos el formulario de subida de archivos
+            if (rol === 'student') {
+                document.getElementById('uploadSection').style.display = 'none';
+            } else {
+                document.getElementById('uploadSection').style.display = 'block';
+            }
+            cargarLibros();
+        }
+
+        function cerrarSesion() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('titulo', document.getElementById('tituloLibro').value);
+            formData.append('autor', document.getElementById('autorLibro').value);
+            formData.append('archivo', document.getElementById('archivoLibro').files['0']);
+
+            const respuesta = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await respuesta.json();
+            if (respuesta.ok) {
+                alert(data.mensaje);
+                document.getElementById('uploadForm').reset();
+                cargarLibros();
+            } else {
+                alert(data.error || 'Error al subir el archivo');
+            }
+        });
+
+        async function cargarLibros() {
+            const respuesta = await fetch('/api/libros');
+            const libros = await respuesta.json();
+            const lista = document.getElementById('listaLibros');
+            lista.innerHTML = '';
+
+            if(libros.length === 0) {
+                lista.innerHTML = '<p style="text-align:center; color:#7f8c8d;">No hay materiales subidos aún.</p>';
+                return;
+            }
+
+            libros.forEach(l => {
+                lista.innerHTML += `
+                    <div class="libro-item">
+                        <b>📚 ${l.titulo}</b> - <i>${l.autor}</i><br>
+                        <small>Subido por Prof./Admin: ${l.profesor}</small><br>
+                        <a href="/uploads/${l.archivo}" target="_blank">📥 Descargar Archivo PDF</a>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
